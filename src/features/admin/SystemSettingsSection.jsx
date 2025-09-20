@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, Save, Loader2, AlertTriangle, Percent, Megaphone, Clock, Trash2, KeyRound, Wind, UserPlus, Phone, AtSign, Briefcase, MessageSquare } from 'lucide-react';
+import { Settings, Save, Loader2, AlertTriangle, Percent, Megaphone, Clock, Trash2, KeyRound, Wind, UserPlus, Phone, AtSign, Briefcase, MessageSquare, Users, Map } from 'lucide-react';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import ConfirmationModal from '../../components/ui/ConfirmationModal.jsx';
 import * as DataService from '../../services/dataService.js';
@@ -118,6 +118,12 @@ const SystemSettingsSection = ({ showNotification = console.log }) => {
             case 'announcements':
                 result = await DataService.deleteAllAnnouncements(db);
                 break;
+            case 'routes':
+                result = await DataService.deleteAllRoutes(db);
+                break;
+            case 'users':
+                result = await DataService.deleteAllUsers(db);
+                break;
             default:
                 result = { success: false, error: 'Unknown data type.' };
         }
@@ -162,10 +168,12 @@ const SystemSettingsSection = ({ showNotification = console.log }) => {
     ];
 
     const dangerZoneActions = [
-        { label: 'Clear All Support Tickets', action: 'tickets' },
-        { label: 'Clear All Bills', action: 'bills' },
-        { label: 'Clear All Meter Readings', action: 'readings' },
-        { label: 'Clear All Announcements', action: 'announcements' },
+        { label: 'Clear All Support Tickets', action: 'tickets', icon: MessageSquare },
+        { label: 'Clear All Bills', action: 'bills', icon: Briefcase },
+        { label: 'Clear All Meter Readings', action: 'readings', icon: Wind },
+        { label: 'Clear All Announcements', action: 'announcements', icon: Megaphone },
+        { label: 'Clear All Meter Routes', action: 'routes', icon: Map },
+        { label: 'Clear All User Profiles', action: 'users', icon: Users },
     ];
 
     if (isLoading) {
@@ -226,12 +234,15 @@ const SystemSettingsSection = ({ showNotification = console.log }) => {
                 </h3>
                 <p className="text-sm text-gray-600 mt-1 mb-4">These actions are destructive and cannot be undone. This will permanently delete transactional data from the database, effectively resetting parts of your system.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {dangerZoneActions.map(action => (
-                        <button type="button" key={action.action} onClick={() => setConfirmAction(action.action)} className="p-4 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 hover:border-red-400 transition-colors text-left">
-                            <p className="font-semibold text-red-800 flex items-center"><Trash2 size={16} className="mr-2"/>{action.label}</p>
-                            <p className="text-xs text-red-600 mt-1">Permanently delete all {action.action} from the database.</p>
-                        </button>
-                    ))}
+                    {dangerZoneActions.map(action => {
+                        const Icon = action.icon;
+                        return (
+                            <button type="button" key={action.action} onClick={() => setConfirmAction(action.action)} className="p-4 border border-red-200 rounded-lg bg-red-50 hover:bg-red-100 hover:border-red-400 transition-colors text-left">
+                                <p className="font-semibold text-red-800 flex items-center"><Icon size={16} className="mr-2"/>{action.label}</p>
+                                <p className="text-xs text-red-600 mt-1">Permanently delete all {action.action} from the database.</p>
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
 

@@ -40,7 +40,8 @@ export const Notification = React.memo(({ message, type, onClose }) => {
       >
         <X size={18} />
       </button>
-      <style jsx global>{`
+      <style>
+        {`
         @keyframes slide-in-right {
           from {
             transform: translateX(100%);
@@ -54,7 +55,8 @@ export const Notification = React.memo(({ message, type, onClose }) => {
         .animate-slide-in-right {
           animation: slide-in-right 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 });

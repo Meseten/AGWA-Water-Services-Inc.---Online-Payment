@@ -72,7 +72,7 @@ const ContactUsSection = ({ systemSettings = {} }) => {
         addressLines: [
             "AGWA Water Services Tower",
             "123 Aqua Drive, Hydro Business Park",
-            "Quezon City, Metro Manila, Philippines 1101"
+            "Naic, Cavite, Philippines 4110"
         ],
         hours: "Mon - Fri, 8:00 AM - 5:00 PM PHT (Closed on weekends & public holidays)",
         note: "Walk-ins are welcome for payments and specific services. For complex concerns, an appointment is recommended to ensure specialist availability.",
@@ -134,8 +134,8 @@ const ContactUsSection = ({ systemSettings = {} }) => {
                         ))}
                     </div>
                 </div>
-                <div className="text-sm text-gray-600 space-y-1 mt-2">
-                    <p className="flex items-center"><Clock size={14} className="mr-2 text-gray-500"/><strong>Hours:</strong> {officeInfo.hours}</p>
+                <div className="text-sm text-gray-600 space-y-2 mt-2">
+                    <p className="flex items-start"><Clock size={14} className="mr-2 mt-0.5 text-gray-500 flex-shrink-0"/><strong>Hours:</strong> {officeInfo.hours}</p>
                     <p className="flex items-start"><MapPin size={14} className="mr-2 mt-0.5 text-gray-500 flex-shrink-0"/><strong>Location Note:</strong> {officeInfo.note}</p>
                 </div>
                 <a

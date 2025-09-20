@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from './Modal';
-import { Printer, X, Info, Download, FileText } from 'lucide-react';
+import { Printer, X, Download, FileText } from 'lucide-react';
 import { formatDate } from '../../utils/userUtils';
 import Barcode from './Barcode.jsx';
 import DOMPurify from 'dompurify';
@@ -29,7 +29,7 @@ const InvoiceView = ({
 
     const formatAddressToString = (addressObj) => {
         if (!addressObj || typeof addressObj !== 'object') return addressObj || 'N/A';
-        const parts = [addressObj.street, addressObj.barangay, addressObj.district, "Quezon City"];
+        const parts = [addressObj.street, addressObj.barangay, addressObj.district, "Naic, Cavite"];
         return parts.filter(p => p && p.trim()).join(', ');
     };
 
@@ -113,28 +113,6 @@ const InvoiceView = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="" size="full" modalDialogClassName="sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl w-[95vw] h-[95vh]" contentClassName="p-0">
-            <style>
-                {`
-                    .paid-stamp {
-                        position: absolute;
-                        top: 40%;
-                        left: 50%;
-                        transform: translate(-50%, -50%) rotate(-20deg);
-                        color: #e53e3e;
-                        border: 5px double #e53e3e;
-                        padding: 12px 30px;
-                        border-radius: 6px;
-                        font-family: 'Courier New', Courier, monospace;
-                        text-align: center;
-                        opacity: 0.6;
-                        z-index: 1000;
-                        pointer-events: none;
-                        filter: blur(0.5px) grayscale(10%) sepia(50%) brightness(90%) contrast(120%);
-                    }
-                    .paid-stamp-main { font-size: 3rem; font-weight: bold; letter-spacing: 5px; line-height: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.1); }
-                    .paid-stamp-date { font-size: 0.9rem; font-weight: 600; margin-top: 8px; display: block; }
-                `}
-            </style>
             <div className="flex justify-between items-center p-3 sm:p-4 border-b border-gray-200 bg-slate-50 rounded-t-xl sticky top-0 z-20">
                 <div className="flex items-center">
                     <FileText size={22} className="mr-2.5 text-blue-600" />
@@ -177,7 +155,7 @@ const InvoiceView = ({
                             <div className="text-right text-xs">
                                 <div className="font-semibold">AGWA Water Services, Inc.</div>
                                 <div>123 Aqua Drive, Hydro Business Park</div>
-                                <div>Quezon City, Metro Manila, Philippines 1101</div>
+                                <div>Naic, Cavite, Philippines 4110</div>
                                 <div>VAT Reg. TIN: 000-123-456-789</div>
                                 <div className="no-print-in-iframe">Machine Serial No.: AGWAMSN001</div>
                             </div>
@@ -199,7 +177,7 @@ const InvoiceView = ({
                                 <InfoRow label="Bill Date" value={formatDate(bill.billDate, { year: 'numeric', month: 'long', day: 'numeric' }) || 'N/A'} />
                                 <InfoRow label="Billing Period" value={bill.billingPeriod || bill.monthYear} />
                                 <InfoRow label="Current Reading" value={`${bill.currentReading ?? 'N/A'} m³`} />
-                                <InfoRow label="Previous Reading" value={`${bill.prevReading ?? 'N/A'} m³`} />
+                                <InfoRow label="Previous Reading" value={`${bill.previousReading ?? 'N/A'} m³`} />
                                 <InfoRow label="Consumption" value={`${charges.consumption ?? 'N/A'} m³`} valueClass="font-bold text-slate-900" />
                             </div>
                         </div>

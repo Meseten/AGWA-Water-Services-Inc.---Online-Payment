@@ -51,11 +51,11 @@ const Modal = React.memo(({
     return (
         <div
             className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex justify-center items-center z-[100] p-4 overflow-y-auto animate-fadeIn"
-            onClick={onClose} // Close on overlay click
+            onClick={onClose}
         >
             <div
                 className={`bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} transform transition-all duration-300 ease-out scale-95 opacity-0 animate-modal-appear flex flex-col max-h-[90vh] ${modalDialogClassName}`}
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
+                onClick={(e) => e.stopPropagation()}
             >
                 {title && (
                     <div className="flex justify-between items-center p-4 sm:p-5 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-xl">
@@ -75,7 +75,8 @@ const Modal = React.memo(({
                     {children}
                 </div>
             </div>
-            <style jsx global>{`
+            <style>
+                {`
                 @keyframes fadeIn {
                     from { opacity: 0; }
                     to { opacity: 1; }
@@ -90,7 +91,8 @@ const Modal = React.memo(({
                 .animate-modal-appear {
                     animation: modal-appear 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
                 }
-            `}</style>
+                `}
+            </style>
         </div>
     );
 });

@@ -6,6 +6,8 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner.jsx";
 import * as DataService from "../../services/dataService.js";
 import { callGeminiAPI } from "../../services/geminiService.js";
 import { formatDate } from "../../utils/userUtils.js";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const CustomerDashboardMain = ({ user, userData, db, showNotification, setActiveSection, billingService: calculateBillDetails }) => {
     const [recentBills, setRecentBills] = useState([]);
@@ -18,6 +20,13 @@ const CustomerDashboardMain = ({ user, userData, db, showNotification, setActive
     const [waterSavingTips, setWaterSavingTips] = useState('');
     const [isLoadingTips, setIsLoadingTips] = useState(false);
     const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
+
+    const formatAddressToString = (addressObj) => {
+        if (!addressObj) return 'the Philippines';
+        if (typeof addressObj === 'string') return addressObj;
+        const parts = [addressObj.barangay, addressObj.district];
+        return parts.filter(p => p && p.trim()).join(', ') || 'the Philippines';
+    };
 
     const fetchCustomerDashboardData = useCallback(async () => {
         if (!user || !user.uid || !userData || !calculateBillDetails) {
@@ -70,8 +79,8 @@ const CustomerDashboardMain = ({ user, userData, db, showNotification, setActive
         setIsTipsModalOpen(true);
         setWaterSavingTips('');
         try {
-            const serviceArea = userData.serviceAddress ? `for a household in ${userData.serviceAddress.split(',').pop().trim()}` : 'for a household';
-            const prompt = `You are Agie, a friendly and knowledgeable water conservation expert from AGWA. Provide a mix of 8-10 engaging items for a customer. Include practical water-saving tips, surprising water trivia/facts, and at least one local-context tip for the Philippines. Format them as a fun, easy-to-read list using markdown (e.g., using emojis like 💧 or ✨, and bolding for emphasis).`;
+            const serviceArea = `for a household in ${formatAddressToString(userData.serviceAddress)}`;
+            const prompt = `You are Agie, a friendly and knowledgeable water conservation expert from AGWA. Provide a mix of 8-10 engaging items for a customer. Include practical water-saving tips, surprising water trivia/facts, and at least one local-context tip for the Philippines. Format them as a fun, easy-to-read list using markdown (e.g., using emojis like 💧 or ✨, and bolding for emphasis). The user is located in Naic, Cavite.`;
             const tips = await callGeminiAPI(prompt);
             setWaterSavingTips(tips);
         } catch (error) {
@@ -144,7 +153,7 @@ const CustomerDashboardMain = ({ user, userData, db, showNotification, setActive
                      <button onClick={() => setActiveSection('myBills')} className={`${quickActionCardClass} focus:ring-green-500 border-l-4 border-green-500`}>
                         <CreditCard size={26} className="mb-2 text-green-500" />
                         <h4 className="font-semibold text-green-700 text-md">Pay My Bill</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">View outstanding bills and make (simulated) payments.</p>
+                        <p className="text-xs text-gray-500 mt-0.5">View outstanding bills and make payments.</p>
                     </button>
                      <button onClick={() => setActiveSection('reportIssue')} className={`${quickActionCardClass} focus:ring-orange-500 border-l-4 border-orange-500`}>
                         <AlertTriangle size={26} className="mb-2 text-orange-500" />
@@ -166,8 +175,10 @@ const CustomerDashboardMain = ({ user, userData, db, showNotification, setActive
                 {isLoadingTips ? (
                     <div className="flex justify-center items-center h-40"><LoadingSpinner message="Agie is thinking of the best tips for you..." /></div>
                 ) : (
-                    <div className="prose prose-sm sm:prose max-w-none whitespace-pre-line p-2 leading-relaxed text-gray-700">
-                        {waterSavingTips || "No tips available at the moment. Please try again!"}
+                    <div className="prose prose-sm sm:prose max-w-none p-2 leading-relaxed text-gray-700">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {waterSavingTips}
+                        </ReactMarkdown>
                     </div>
                 )}
             </Modal>

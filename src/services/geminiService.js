@@ -39,28 +39,26 @@ export const callGeminiAPI = async (promptText) => {
     }
 };
 
-export const generateAnnouncement = async ({ title, reason, area, time }) => {
+export const generateAnnouncement = async ({ reason, area, time }) => {
     const prompt = `
         You are a professional communications officer for AGWA Water Services.
-        Generate a formal, clear, and customer-friendly public service announcement based on the following details.
-        Use markdown for formatting, especially **bolding** for key information.
+        Generate a formal, clear, and customer-friendly public service announcement in HTML format based on the following details.
 
         **Announcement Details:**
-        - **Primary Title/Reason:** ${title || reason}
-        - **Event Description:** ${reason}
+        - **Primary Reason:** ${reason}
         - **Affected Area(s):** ${area || "All service areas"}
         - **Date and Time:** ${time || "Effective immediately until further notice"}
 
-        **Instructions:**
-        1.  Start with a clear headline. Use the provided Title/Reason.
-        2.  Write a main paragraph explaining the situation clearly.
-        3.  List the key details (Affected Areas, Date/Time) using bolded headers.
-        4.  If it's a service interruption, advise customers to store an adequate amount of water for their needs during this period.
-        5.  Apologize for the inconvenience.
-        6.  End with contact information: "For inquiries, please call our 24/7 hotline at 1627-AGWA."
-        7.  Ensure the tone is professional, empathetic, and reassuring.
+        **Instructions for HTML Output:**
+        1.  Start with an <h2> tag for the headline, using the Primary Reason.
+        2.  Write a main paragraph explaining the situation clearly in a <p> tag.
+        3.  List the key details (Affected Areas, Date/Time) using a <ul> with <li> items. Use <strong> tags for the labels (e.g., "<strong>Affected Areas:</strong> ...").
+        4.  If it's a service interruption, add a paragraph advising customers to store water.
+        5.  Include a paragraph apologizing for the inconvenience.
+        6.  End with a paragraph for contact information: "For inquiries, please call our 24/7 hotline at <strong>1627-AGWA</strong>."
+        7.  Ensure the entire output is valid HTML that can be placed inside a <div>.
 
-        Generate the full announcement content now.
+        Generate the full HTML announcement content now.
     `;
 
     return callGeminiAPI(prompt);

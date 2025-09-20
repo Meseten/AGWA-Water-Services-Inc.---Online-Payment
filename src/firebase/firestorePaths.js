@@ -1,4 +1,3 @@
-
 export const APP_ID_FOR_FIRESTORE_PATHS = 'c_0e480e34ffaa3f81_agwa_water_services_app-268';
 
 export const getAppId = () => {
@@ -25,3 +24,4 @@ export const allBillDocumentPath = (billId) => `${allBillsCollectionPath()}/${bi
 export const allMeterReadingsCollectionPath = () => `${publicDataCollectionPath()}/all_meter_readings`;
 export const allMeterReadingDocumentPath = (readingId) => `${allMeterReadingsCollectionPath()}/${readingId}`;
 export const meterRoutesCollectionPath = () => `${publicDataCollectionPath()}/meter_routes`;
+export const meterRouteDocumentPath = (routeId) => `${meterRoutesCollectionPath()}/${routeId}`;

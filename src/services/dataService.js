@@ -10,9 +10,8 @@ import {
     systemSettingsDocumentPath,
     allBillsCollectionPath, allBillDocumentPath,
     allMeterReadingsCollectionPath, allMeterReadingDocumentPath,
-    publicDataCollectionPath, 
-    profilesCollectionPath,
-    meterRoutesCollectionPath
+    meterRoutesCollectionPath,
+    profilesCollectionPath, meterRouteDocumentPath
 } from '../firebase/firestorePaths.js'; 
 import * as billingService from './billingService.js';
 import { determineServiceTypeAndRole } from '../utils/userUtils.js';
@@ -22,6 +21,26 @@ const handleFirestoreError = (functionName, error) => {
     const userFriendlyMessage = `An error occurred in ${functionName}. Code: ${error.code}. Please check Firestore rules and indexes. If the error is 'failed-precondition', you likely need to create a database index in the Firebase console.`;
     return { success: false, error: userFriendlyMessage };
 };
+
+const safeToDate = (timestamp) => {
+    if (!timestamp) return null;
+    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        return timestamp.toDate();
+    }
+    if (timestamp instanceof Date) {
+        return timestamp;
+    }
+    try {
+        const date = new Date(timestamp);
+        if (!isNaN(date)) return date;
+    } catch (e) {
+        return null;
+    }
+    return null;
+};
+
+export const deleteAllRoutes = (dbInstance) => deleteAllFromCollection(dbInstance, meterRoutesCollectionPath());
+export const deleteAllUsers = (dbInstance) => deleteAllFromCollection(dbInstance, profilesCollectionPath());
 
 export const batchUpdateTicketStatus = async (dbInstance, ticketIds, newStatus) => {
     try {
@@ -56,6 +75,9 @@ export const deleteUserProfile = async (dbInstance, userId) => {
 const deleteAllFromCollection = async (dbInstance, collectionPath) => {
     try {
         const snapshot = await getDocs(collection(dbInstance, collectionPath));
+        if (snapshot.empty) {
+            return { success: true, count: 0 };
+        }
         const batchSize = 500;
         let i = 0;
         let batch = writeBatch(dbInstance);
@@ -152,7 +174,7 @@ export const getAccountsByLocation = async (dbInstance, location) => {
 export const createOrUpdateMeterRoute = async (dbInstance, routeData, routeId = null) => {
     try {
         if (routeId) {
-            const routeRef = doc(dbInstance, meterRoutesCollectionPath(), routeId);
+            const routeRef = doc(dbInstance, meterRouteDocumentPath(routeId));
             await updateDoc(routeRef, { ...routeData, updatedAt: serverTimestamp() });
         } else {
             await addDoc(collection(dbInstance, meterRoutesCollectionPath()), { ...routeData, createdAt: serverTimestamp() });
@@ -175,7 +197,7 @@ export const getAllMeterRoutes = async (dbInstance) => {
 
 export const deleteMeterRoute = async (dbInstance, routeId) => {
     try {
-        await deleteDoc(doc(dbInstance, meterRoutesCollectionPath(), routeId));
+        await deleteDoc(doc(dbInstance, meterRouteDocumentPath(routeId)));
         return { success: true };
     } catch (error) {
         return handleFirestoreError('deleteMeterRoute', error);
@@ -199,9 +221,11 @@ export const getRevenueStats = async (dbInstance) => {
         const monthlyRevenue = {};
         snapshot.forEach(doc => {
             const bill = doc.data();
-            const paymentDate = bill.paymentDate?.toDate ? bill.paymentDate.toDate() : new Date();
-            const monthYear = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
-            monthlyRevenue[monthYear] = (monthlyRevenue[monthYear] || 0) + (bill.amountPaid || 0);
+            const paymentDate = safeToDate(bill.paymentDate);
+            if (paymentDate) {
+                const monthYear = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+                monthlyRevenue[monthYear] = (monthlyRevenue[monthYear] || 0) + (bill.amountPaid || 0);
+            }
         });
         const sortedRevenue = Object.entries(monthlyRevenue)
             .sort(([a], [b]) => a.localeCompare(b))
@@ -233,10 +257,12 @@ export const getDailyRevenueStats = async (dbInstance, days = 30) => {
         }
         snapshot.forEach(doc => {
             const bill = doc.data();
-            const paymentDate = bill.paymentDate?.toDate ? bill.paymentDate.toDate() : new Date();
-            const dayKey = paymentDate.toISOString().split('T')[0];
-            if(dailyRevenue[dayKey] !== undefined) {
-               dailyRevenue[dayKey] += (bill.amountPaid || 0);
+            const paymentDate = safeToDate(bill.paymentDate);
+            if (paymentDate) {
+                const dayKey = paymentDate.toISOString().split('T')[0];
+                if(dailyRevenue[dayKey] !== undefined) {
+                   dailyRevenue[dayKey] += (bill.amountPaid || 0);
+                }
             }
         });
         return { success: true, data: dailyRevenue };
@@ -252,7 +278,7 @@ export const getPaymentDayOfWeekStats = async (dbInstance) => {
         const dayCounts = { 'Sun': 0, 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0 };
         snapshot.forEach(doc => {
             const bill = doc.data();
-            const paymentDate = bill.paymentDate?.toDate ? bill.paymentDate.toDate() : null;
+            const paymentDate = safeToDate(bill.paymentDate);
             if (paymentDate) {
                 const dayIndex = paymentDate.getDay();
                 const dayName = Object.keys(dayCounts)[dayIndex];
@@ -291,6 +317,7 @@ export const getAccountsInRoute = async (dbInstance, route) => {
 
         for (let i = 0; i < accountNumbers.length; i += 30) {
             const chunk = accountNumbers.slice(i, i + 30);
+            if (chunk.length === 0) continue;
             const q = query(profilesRef, where('accountNumber', 'in', chunk));
             const snapshot = await getDocs(q);
             snapshot.forEach(doc => fetchedProfiles.push({ id: doc.id, ...doc.data() }));
@@ -364,13 +391,20 @@ export const generateBillForUser = async (dbInstance, userId, userProfile) => {
 
         const latestReading = readingsSnapshot.docs[0].data();
         const previousReading = readingsSnapshot.docs[1].data();
+        
+        const latestReadingDate = safeToDate(latestReading.readingDate);
+        const previousReadingDate = safeToDate(previousReading.readingDate);
+
+        if (!latestReadingDate || !previousReadingDate) {
+             return { success: false, error: "Invalid reading date found for one or more records." };
+        }
 
         const consumption = latestReading.readingValue - previousReading.readingValue;
         if (consumption < 0) {
             return { success: false, error: "Cannot generate bill. The latest reading value is less than the previous one." };
         }
 
-        const billMonthYear = new Date(latestReading.readingDate.toDate()).toLocaleString('default', { month: 'long', year: 'numeric' });
+        const billMonthYear = latestReadingDate.toLocaleString('default', { month: 'long', year: 'numeric' });
         
         const existingBillQuery = query(
             collection(dbInstance, allBillsCollectionPath()),
@@ -387,7 +421,7 @@ export const generateBillForUser = async (dbInstance, userId, userProfile) => {
         
         const charges = billingService.calculateBillDetails(consumption, userProfile.serviceType, userProfile.meterSize, systemSettings);
         
-        const billDate = latestReading.readingDate.toDate();
+        const billDate = latestReadingDate;
         const dueDate = new Date(billDate);
         dueDate.setDate(dueDate.getDate() + 15);
 
@@ -395,7 +429,7 @@ export const generateBillForUser = async (dbInstance, userId, userProfile) => {
             userId: userId,
             accountNumber: userProfile.accountNumber,
             userName: userProfile.displayName,
-            billingPeriod: `${formatDate(previousReading.readingDate.toDate())} - ${formatDate(latestReading.readingDate.toDate())}`,
+            billingPeriod: `${previousReadingDate.toLocaleDateString('en-US')} - ${latestReadingDate.toLocaleDateString('en-US')}`,
             monthYear: billMonthYear,
             billDate: Timestamp.fromDate(billDate),
             dueDate: Timestamp.fromDate(dueDate),
@@ -434,7 +468,10 @@ export const getBillableAccountsInLocation = async (dbInstance, location) => {
             if (readingsSnapshot.docs.length < 2) continue;
 
             const latestReading = readingsSnapshot.docs[0].data();
-            const billMonthYear = new Date(latestReading.readingDate.toDate()).toLocaleString('default', { month: 'long', year: 'numeric' });
+            const latestReadingDate = safeToDate(latestReading.readingDate);
+            if (!latestReadingDate) continue;
+
+            const billMonthYear = latestReadingDate.toLocaleString('default', { month: 'long', year: 'numeric' });
             
             const existingBillQuery = query(collection(dbInstance, allBillsCollectionPath()), where("userId", "==", userProfile.id), where("monthYear", "==", billMonthYear));
             const existingBillSnapshot = await getDocs(existingBillQuery);
@@ -461,8 +498,6 @@ export const generateBillsForMultipleAccounts = async (dbInstance, accounts) => 
     }
     return logs;
 };
-
-const formatDate = (date) => new Date(date).toLocaleDateString('en-US');
 
 export const createUserProfile = async (dbInstance, userId, profileData) => {
     try {
@@ -841,7 +876,7 @@ export const getPaymentsByClerkForToday = async (dbInstance, clerkId) => {
         const stats = {
             paymentsTodayCount: snapshot.size,
             totalCollectedToday: totalCollected,
-            transactions: transactions.sort((a,b) => b.paymentTimestamp.toDate() - a.paymentTimestamp.toDate())
+            transactions: transactions.sort((a,b) => safeToDate(b.paymentTimestamp) - safeToDate(a.paymentTimestamp))
         };
         
         return { success: true, data: stats };
