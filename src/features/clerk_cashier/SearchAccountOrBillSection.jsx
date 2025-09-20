@@ -8,6 +8,8 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import * as DataService from '../../services/dataService.js';
 import { formatDate } from '../../utils/userUtils.js';
 import InvoiceView from '../../components/ui/InvoiceView.jsx';
+import { allBillsCollectionPath } from '../../firebase/firestorePaths.js'; // CORRECTED IMPORT
+import { where } from 'firebase/firestore'; // NEEDED FOR THE QUERY
 
 const SearchAccountOrBillSection = ({ db, showNotification, billingService: calculateBillDetails }) => {
     const [searchType, setSearchType] = useState('account');
@@ -55,7 +57,7 @@ const SearchAccountOrBillSection = ({ db, showNotification, billingService: calc
                     setError(usersResult.error || "Failed to search accounts.");
                 }
             } else { 
-                const billsResult = await DataService.getDocuments(db, DataService.allBillsCollectionPath(), [where("id", "==", searchTerm.trim())]);
+                const billsResult = await DataService.getDocuments(db, allBillsCollectionPath(), [where("id", "==", searchTerm.trim())]);
                 if (billsResult.success && billsResult.data.length > 0) {
                     const foundBill = billsResult.data[0];
                     setSearchedData(foundBill);
@@ -84,7 +86,7 @@ const SearchAccountOrBillSection = ({ db, showNotification, billingService: calc
 
     const formatAddressToString = (addressObj) => {
         if (!addressObj || typeof addressObj !== 'object') return addressObj || 'N/A';
-        const parts = [addressObj.street, addressObj.barangay, addressObj.district, "Quezon City"];
+        const parts = [addressObj.street, addressObj.barangay, addressObj.district, "Naic, Cavite"];
         return parts.filter(p => p && p.trim()).join(', ');
     };
 
