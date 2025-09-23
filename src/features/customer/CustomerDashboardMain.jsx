@@ -112,8 +112,8 @@ const CustomerDashboardMain = ({ user, userData, db, showNotification, setActive
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-5 rounded-xl shadow-lg">
+            <div className="space-y-6">
+                <div className="bg-white p-5 rounded-xl shadow-lg w-full">
                     <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center">
                         <FileText size={22} className="mr-2 text-gray-500"/>Recent Bills Summary
                     </h3>
@@ -149,7 +149,7 @@ const CustomerDashboardMain = ({ user, userData, db, showNotification, setActive
                     )}
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                      <button onClick={() => setActiveSection('myBills')} className={`${quickActionCardClass} focus:ring-green-500 border-l-4 border-green-500`}>
                         <CreditCard size={26} className="mb-2 text-green-500" />
                         <h4 className="font-semibold text-green-700 text-md">Pay My Bill</h4>

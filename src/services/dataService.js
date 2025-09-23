@@ -257,12 +257,10 @@ export const getDailyRevenueStats = async (dbInstance, days = 30) => {
         }
         snapshot.forEach(doc => {
             const bill = doc.data();
-            const paymentDate = safeToDate(bill.paymentDate);
-            if (paymentDate) {
-                const dayKey = paymentDate.toISOString().split('T')[0];
-                if(dailyRevenue[dayKey] !== undefined) {
-                   dailyRevenue[dayKey] += (bill.amountPaid || 0);
-                }
+            const paymentDate = bill.paymentDate?.toDate ? bill.paymentDate.toDate() : new Date();
+            const dayKey = paymentDate.toISOString().split('T')[0];
+            if(dailyRevenue[dayKey] !== undefined) {
+               dailyRevenue[dayKey] += (bill.amountPaid || 0);
             }
         });
         return { success: true, data: dailyRevenue };
@@ -270,7 +268,6 @@ export const getDailyRevenueStats = async (dbInstance, days = 30) => {
         return handleFirestoreError('getDailyRevenueStats', error);
     }
 };
-
 export const getPaymentDayOfWeekStats = async (dbInstance) => {
     try {
         const paidBillsQuery = query(collection(dbInstance, allBillsCollectionPath()), where("status", "==", "Paid"));

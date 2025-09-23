@@ -134,15 +134,22 @@ const ContactUsSection = ({ systemSettings = {} }) => {
                         ))}
                     </div>
                 </div>
-                <div className="text-sm text-gray-600 space-y-2 mt-2">
-                    <p className="flex items-start"><Clock size={14} className="mr-2 mt-0.5 text-gray-500 flex-shrink-0"/><strong>Hours:</strong> {officeInfo.hours}</p>
-                    <p className="flex items-start"><MapPin size={14} className="mr-2 mt-0.5 text-gray-500 flex-shrink-0"/><strong>Location Note:</strong> {officeInfo.note}</p>
+                <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm text-gray-600 mt-2">
+                    <div className="flex items-start font-semibold">
+                        <Clock size={14} className="mr-2 mt-0.5 text-gray-500 flex-shrink-0"/>Hours:
+                    </div>
+                    <div>{officeInfo.hours}</div>
+                    
+                    <div className="flex items-start font-semibold">
+                        <MapPin size={14} className="mr-2 mt-0.5 text-gray-500 flex-shrink-0"/>Location Note:
+                    </div>
+                    <div>{officeInfo.note}</div>
                 </div>
                 <a
                     href={officeInfo.mapLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                    className="mt-4 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"
                 >
                     View on Map <MapPin size={12} className="ml-1" />
                 </a>
@@ -159,7 +166,7 @@ const ContactUsSection = ({ systemSettings = {} }) => {
                     ))}
                 </div>
                 <p className="mt-8 text-xs text-gray-500">
-                    For online self-service options, please <button onClick={() => { alert("Please log in to access self-service options.")}} className="text-blue-600 hover:underline font-medium">log in</button> to your account. <br/>
+                    For online self-service options, please log in to your account. <br/>
                     General information is also available on our official website: <a href="https://www.agwa-waterservices.com.ph" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">www.agwa-waterservices.com.ph</a>
                 </p>
             </div>

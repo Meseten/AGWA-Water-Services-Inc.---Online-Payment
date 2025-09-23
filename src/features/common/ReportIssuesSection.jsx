@@ -8,11 +8,19 @@ import Tooltip from '../../components/ui/Tooltip.jsx';
 const commonInputClass = "w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 focus:outline-none transition duration-150 text-sm placeholder-gray-400";
 const commonButtonClass = "flex items-center justify-center px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-opacity-50 disabled:opacity-60 active:scale-95 text-sm";
 
+const formatAddressToString = (addressObj) => {
+    if (!addressObj) return '';
+    if (typeof addressObj === 'string') return addressObj;
+    const parts = [addressObj.street, addressObj.barangay, addressObj.district, "Naic, Cavite"];
+    return parts.filter(p => p && p.trim()).join(', ');
+};
+
 const ReportIssueSection = ({ user, userData, db, auth, showNotification }) => {
+    
     const initialFormValues = {
         issueType: '',
         description: '',
-        issueAddress: userData?.serviceAddress || userData?.accountNumber || '',
+        issueAddress: formatAddressToString(userData?.serviceAddress),
     };
     
     const [isAiCategorizing, setIsAiCategorizing] = useState(false);
@@ -75,6 +83,19 @@ const ReportIssueSection = ({ user, userData, db, auth, showNotification }) => {
         }
          setFieldValue('issueType', '');
     }, [userData.role, setFieldValue]);
+    
+    useEffect(() => {
+        const prefilledDescription = localStorage.getItem('chatbotIssueDescription');
+        if (prefilledDescription) {
+            setFieldValue('description', prefilledDescription);
+            localStorage.removeItem('chatbotIssueDescription');
+        }
+        const prefilledType = localStorage.getItem('chatbotIssueTypeSuggestion');
+        if (prefilledType) {
+            setFieldValue('issueType', prefilledType);
+             localStorage.removeItem('chatbotIssueTypeSuggestion');
+        }
+    }, [setFieldValue]);
 
     const handleAiCategorize = async () => {
         if (!values.description.trim()) {
